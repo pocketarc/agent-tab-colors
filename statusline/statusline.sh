@@ -1,8 +1,4 @@
 #!/usr/bin/env bash
-# Claude Code statusLine: reads the status JSON on stdin and prints one line.
-#
-# This has to run under bash 3.2, the /bin/bash that macOS ships, so no ${var^^},
-# no mapfile, and no associative arrays.
 
 set -u
 
@@ -11,14 +7,18 @@ input=$(cat 2>/dev/null || true)
 model_id=""
 model_name=""
 cur_dir=""
+five_hour=""
+seven_day=""
 
 if [ -n "$input" ]; then
   {
     IFS= read -r model_id
     IFS= read -r model_name
     IFS= read -r cur_dir
+    IFS= read -r five_hour
+    IFS= read -r seven_day
   } <<EOF
-$(printf '%s' "$input" | jq -r '.model.id // "", .model.display_name // "", (.workspace.current_dir // .cwd // "")' 2>/dev/null)
+$(printf '%s' "$input" | jq -r '.model.id // "", .model.display_name // "", (.workspace.current_dir // .cwd // ""), (.rate_limits.five_hour.used_percentage // "" | if type == "number" then floor else "" end), (.rate_limits.seven_day.used_percentage // "" | if type == "number" then floor else "" end)' 2>/dev/null)
 EOF
 fi
 
@@ -51,6 +51,18 @@ reset=$'\033[0m'
 dir_style=$'\033[38;2;226;232;240m'
 dim=$'\033[38;2;113;122;138m'
 quiet=$'\033[38;2;148;158;173m'
+warn=$'\033[38;2;251;191;36m'
+alarm=$'\033[38;2;248;113;113m'
+
+usage_style() {
+  if [ "$1" -ge 80 ]; then
+    printf '%s' "$alarm"
+  elif [ "$1" -ge 50 ]; then
+    printf '%s' "$warn"
+  else
+    printf '%s' "$dim"
+  fi
+}
 
 if [ "$is_default" = true ]; then
   model_part="${quiet}${label}${reset}"
@@ -78,4 +90,16 @@ else
   branch_part=""
 fi
 
-printf '%s  %s%s%s%s' "$model_part" "$dir_style" "$dir_name" "$reset" "$branch_part"
+usage_part=""
+case "$five_hour" in
+  ''|*[!0-9]*) ;;
+  *) usage_part="  $(usage_style "$five_hour")5h ${five_hour}%${reset}" ;;
+esac
+
+# Below 75% the 5-hour window is the one that runs out first, so the weekly figure is hidden until then.
+case "$seven_day" in
+  ''|*[!0-9]*) ;;
+  *) [ "$seven_day" -ge 75 ] && usage_part="${usage_part}  $(usage_style "$seven_day")7d ${seven_day}%${reset}" ;;
+esac
+
+printf '%s  %s%s%s%s%s' "$model_part" "$dir_style" "$dir_name" "$reset" "$branch_part" "$usage_part"

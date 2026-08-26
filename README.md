@@ -53,9 +53,11 @@ Also remove the `hooks` block from `~/.claude/settings.json`.
 
 ## Status line
 
-Also in here: `statusline/statusline.sh`, the status line I use in Claude Code. It shows the model, the current directory, and the git branch.
+This repo also has `statusline/statusline.sh`, the status line I use in Claude Code. It shows the model, the current directory, the git branch, and how much of your usage limit you have spent.
 
-The script prints my default model as quiet grey text and gives every other model a coloured badge, so I can see at a glance when a session is not on the default.
+The 5-hour figure is always there: grey below 50%, amber from 50%, red from 80%. The weekly figure only appears from 75% up, because below that it is the 5-hour window that runs out first.
+
+Both figures come from the `rate_limits` field Claude Code passes to the status line. Subscribers only get that field after the first response of a session, so the figures are missing for a moment at the start.
 
 To use it, copy the script to `~/.claude/statusline.sh` and add this to `~/.claude/settings.json`:
 
