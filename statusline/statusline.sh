@@ -1,12 +1,8 @@
 #!/usr/bin/env bash
-# Claude Code statusLine. Reads the status JSON on stdin and prints one line.
+# Claude Code statusLine: reads the status JSON on stdin and prints one line.
 #
-# The model is styled by exception: Opus 5 with the 1M context is the configured
-# default, so it renders as quiet text. Anything else gets a coloured badge —
-# the badge means "you are not on your default model", and its colour says which
-# model you are on instead.
-#
-# Written for bash 3.2 (the /bin/bash macOS ships), so no ${var^^} or mapfile.
+# This has to run under bash 3.2, the /bin/bash that macOS ships, so no ${var^^},
+# no mapfile, and no associative arrays.
 
 set -u
 
@@ -17,9 +13,6 @@ model_name=""
 cur_dir=""
 
 if [ -n "$input" ]; then
-  # One field per line rather than @tsv: bash treats tab as IFS whitespace and
-  # collapses runs of it, so an empty model name would shift the directory into
-  # the model slot. A blank line survives `read` intact.
   {
     IFS= read -r model_id
     IFS= read -r model_name
@@ -36,10 +29,6 @@ upper() { printf '%s' "$1" | tr '[:lower:]' '[:upper:]'; }
 
 haystack="$(lower "$model_id") $(lower "$model_name")"
 
-# Matched against the id as well as the display name, so a renamed display
-# string cannot silently turn the default into a false alarm. "opus-5" does not
-# match "claude-opus-4-5", which is the point of anchoring on the "opus-5" pair
-# rather than a bare "5".
 is_1m=false
 case "$haystack" in
   *"[1m]"*|*"1m context"*) is_1m=true ;;
@@ -54,8 +43,6 @@ label=$model_name
 [ -n "$label" ] || label=$model_id
 [ -n "$label" ] || label="unknown model"
 
-# Display names arrive as e.g. "Opus 5 (1M context)". The parenthetical is
-# noise once the context size has its own tag.
 label=${label%%(*}
 label=$(printf '%s' "$label" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
 [ "$is_1m" = true ] && label="$label · 1M"
@@ -79,8 +66,6 @@ else
   edge=$'\033[38;2;'"$bg"$'m'
   body=$'\033[1;38;2;'"$fg"$';48;2;'"$bg"$'m'
 
-  # ▐ then ▌ fill the half-cells either side, so the chip reads as one pill
-  # instead of a rectangle butted against its neighbours.
   model_part="${edge}▐${reset}${body} $(upper "$label") ${reset}${edge}▌${reset}"
 fi
 

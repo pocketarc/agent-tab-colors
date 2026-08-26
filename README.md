@@ -55,7 +55,7 @@ Also remove the `hooks` block from `~/.claude/settings.json`.
 
 Also in here: `statusline/statusline.sh`, the status line I use in Claude Code. It shows the model, the current directory, and the git branch.
 
-The model is styled by exception. The script prints my default model as quiet grey text and gives every other model a coloured badge, so I can see at a glance when a session is not on the default. I set the default in the script; edit the `is_default` check if yours differs.
+The script prints my default model as quiet grey text and gives every other model a coloured badge, so I can see at a glance when a session is not on the default.
 
 To use it, copy the script to `~/.claude/statusline.sh` and add this to `~/.claude/settings.json`:
 
