@@ -1,5 +1,5 @@
 TAB_STATE_DIR="${HOME}/.claude/run/tab-color"
-TAB_FADE_SECONDS=43200
+TAB_FADE_SECONDS=172800
 TAB_NEUTRAL=120
 
 # Echo "<pid> <tty-name>" for the nearest ancestor that owns a terminal.
