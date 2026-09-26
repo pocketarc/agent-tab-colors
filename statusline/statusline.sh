@@ -4,6 +4,11 @@ set -u
 
 input=$(cat 2>/dev/null || true)
 
+if ! command -v jq >/dev/null 2>&1; then
+  printf 'statusline needs jq'
+  exit 0
+fi
+
 model_id=""
 model_name=""
 cur_dir=""
