@@ -15,6 +15,7 @@ cur_dir=""
 five_hour=""
 seven_day=""
 five_hour_reset=""
+effort=""
 
 if [ -n "$input" ]; then
   {
@@ -24,8 +25,9 @@ if [ -n "$input" ]; then
     IFS= read -r five_hour
     IFS= read -r seven_day
     IFS= read -r five_hour_reset
+    IFS= read -r effort
   } <<EOF
-$(printf '%s' "$input" | jq -r '.model.id // "", .model.display_name // "", (.workspace.current_dir // .cwd // ""), (.rate_limits.five_hour.used_percentage // "" | if type == "number" then floor else "" end), (.rate_limits.seven_day.used_percentage // "" | if type == "number" then floor else "" end), (.rate_limits.five_hour.resets_at // "" | if type == "number" then floor else "" end)' 2>/dev/null)
+$(printf '%s' "$input" | jq -r '.model.id // "", .model.display_name // "", (.workspace.current_dir // .cwd // ""), (.rate_limits.five_hour.used_percentage // "" | if type == "number" then floor else "" end), (.rate_limits.seven_day.used_percentage // "" | if type == "number" then floor else "" end), (.rate_limits.five_hour.resets_at // "" | if type == "number" then floor else "" end), (.effort.level // "")' 2>/dev/null)
 EOF
 fi
 
@@ -43,7 +45,7 @@ esac
 
 is_default=false
 case "$haystack" in
-  *opus-5*|*"opus 5"*) [ "$is_1m" = true ] && is_default=true ;;
+  *opus-5-5*|*"opus 5.5"*) is_default=true ;;
 esac
 
 label=$model_name
@@ -53,6 +55,7 @@ label=$model_name
 label=${label%%(*}
 label=$(printf '%s' "$label" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
 [ "$is_1m" = true ] && label="$label · 1M"
+[ -n "$effort" ] && label="$label · $effort"
 
 reset=$'\033[0m'
 dir_style=$'\033[38;2;226;232;240m'
@@ -110,13 +113,6 @@ case "$seven_day" in
 esac
 
 printf '%s  %s%s%s%s%s' "$model_part" "$dir_style" "$dir_name" "$reset" "$branch_part" "$usage_part"
-
-case "$haystack" in
-  *fable*)
-    fable_note="You probably don't need Fable. It costs double what Opus 5 does, and it's the same quality for most tasks."
-    printf '\n%s%s%s' "$warn" "$fable_note" "$reset"
-    ;;
-esac
 
 # Past 95% anything more may cost extra, so I show how long the wait is.
 case "$five_hour$five_hour_reset" in
